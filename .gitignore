@@ -1,0 +1,3 @@
+books/epub/*
+books/json/*
+.DS_Store
