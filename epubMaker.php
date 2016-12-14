@@ -3,11 +3,11 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 ini_set('memory_limit', '2048M');
 date_default_timezone_set("Asia/Taipei");
-require_once('../configs/db_set_epubMaker.php');
-require_once('../phpTools/dir_operation.php');
-require_once('../phpTools/string_operation.php');
-require_once('../../lib/simpleHtmlDom/simple_html_dom.php');
-require_once("../../lib/EPub/EPub.php");
+require_once('configs/db_set_epubMaker.php');
+require_once('libs/phpTools/dir_operation.php');
+require_once('libs/phpTools/string_operation.php');
+require_once('libs/simpleHtmlDom/simple_html_dom.php');
+require_once("libs/EPub/EPub.php");
 
 $f_var['book_path'] = 'books/';
 $f_var['mode'] = 'db';
