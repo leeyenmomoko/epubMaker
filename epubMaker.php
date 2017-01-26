@@ -78,7 +78,7 @@ if( isset($f_var['books']) && 0<count($f_var['books'])){
           fwrite($handle, $epub);
           fclose($handle);
           echo $f_var['bookSet']['name'].".epub is completed. \r\n<br />";
-          echo "URL: <a href='" . $f_var['book_path'].'epub/'.$f_var['bookSet']['name'].".epub' target='_blank'>Download</a>"
+          echo "URL: <a href='" . $f_var['book_path'].'epub/'.$f_var['bookSet']['name'].".epub' target='_blank'>Download</a>";
         }
       }
     }
