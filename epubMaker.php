@@ -1,4 +1,4 @@
-com<?php
+<?php
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 ini_set('memory_limit', '2048M');
@@ -18,7 +18,7 @@ try{
 catch(PDOException $e){
   require_once("setting.php");
   $f_var['mode'] = 'standard';
-  echo "Could not connect to db.";
+  echo "Could not connect to db.\r\n<br />";
   if(isset($_POST['source']) && $_POST['source'] !== '' &&
     isset($_POST['id']) && $_POST['id'] !== '' &&
     isset($_POST['title']) && $_POST['title'] !== '' &&
@@ -28,7 +28,7 @@ catch(PDOException $e){
     $f_var['books'][] = array('serial'=>$_POST['id'], 'name'=>$_POST['title'], 'author'=>$_POST['author'], 'source'=>$_POST['source']);
   }
   else{
-    echo "no db or post data, use setting.php to make the epub.\r\n";
+    echo "No POST data too, use setting.php to make the epub.\r\n<br />";
   }
 }
 if('db'===$f_var['mode']){
@@ -72,17 +72,18 @@ if( isset($f_var['books']) && 0<count($f_var['books'])){
                         AND enabled=1' ;
             $result = $f_var['db_connet']->query($query);
           }
-          echo "start to make epub.\r\n";
+          echo "start to make epub.\r\n<br />";
           $epub = mkEpub($f_var['bookSet']['name'], $f_var['bookSet']['author'], $articles, $f_var);
           $handle = fopen($f_var['book_path'].'epub/'.$f_var['bookSet']['name'].".epub", 'w');
           fwrite($handle, $epub);
           fclose($handle);
-          echo $f_var['bookSet']['name'].".epub is completed. \r\n";
+          echo $f_var['bookSet']['name'].".epub is completed. \r\n<br />";
+          echo "URL: <a href='" . $f_var['book_path'].'epub/'.$f_var['bookSet']['name'].".epub' target='_blank'>Download</a>"
         }
       }
     }
     else{
-      echo "source ".$f_var['bookSet']['source']." is not existed. \r\n";
+      echo "source ".$f_var['bookSet']['source']." is not existed. \r\n<br />";
     }
   }
 }
@@ -93,7 +94,7 @@ function getBook($f_var){
   $dom = file_get_html(str_replace('[page]', '1', $book_link));
   $result = $dom->find($f_var['source_setting']['first_page_selector']);
   if(0>=count($result)){
-    echo 'can not find first page with pattern '.$f_var['source_setting']['first_page_selector']." .\r\n";
+    echo 'can not find first page with pattern '.$f_var['source_setting']['first_page_selector']." .\r\n<br />";
     exit;
   }
   foreach($result as $target){
@@ -102,7 +103,7 @@ function getBook($f_var){
 
   $result = $dom->find($f_var['source_setting']['pages_container']);
   if(0>=count($result)){
-    echo 'can not find page container with pattern '.$f_var['source_setting']['pages_container']." .\r\n";
+    echo 'can not find page container with pattern '.$f_var['source_setting']['pages_container']." .\r\n<br />";
     exit;
   }
   $pages = array();
@@ -264,7 +265,7 @@ function mkEpub($name, $author, $articles, $f_var){
     .$bookEnd;
     $book->addChapter("第".number2chtstr($ch).'章 - '.$data['title'], "Chapter".str_pad($ch, 5, "0", STR_PAD_LEFT).".html", $chapter);
     $ch++;
-     //echo $chapter." is completed.\r\n";
+     //echo $chapter." is completed.\r\n<br />";
   }
   $book->finalize();
   return $book->getBook();
