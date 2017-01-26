@@ -16,20 +16,31 @@ try{
     $f_var['db_connet'] = new PDO(DB_TYPE.':host='.DB_HOST.'; dbname='.DB_DATABASE, DB_USER, DB_PASSWORD);
 }
 catch(PDOException $e){
-  echo "Could not connect to db. will use setting.php to make the epub.\r\n";
-  $f_var['mode'] = 'standard';
   require_once("setting.php");
+  $f_var['mode'] = 'standard';
+  echo "Could not connect to db.";
+  if(isset($_POST['source']) && $_POST['source'] !== '' &&
+    isset($_POST['id']) && $_POST['id'] !== '' &&
+    isset($_POST['title']) && $_POST['title'] !== '' &&
+    isset($_POST['author']) && $_POST['author'] !== ''
+  ){
+    empty($f_var['books']);
+    $f_var['books'][] = array('serial'=>$_POST['id'], 'name'=>$_POST['title'], 'author'=>$_POST['author'], 'source'=>$_POST['source']);
+  }
+  else{
+    echo "no db or post data, use setting.php to make the epub.\r\n";
+  }
 }
 if('db'===$f_var['mode']){
-  $query = 'SELECT * 
+  $query = 'SELECT *
             FROM books
-            WHERE enabled = 1 
+            WHERE enabled = 1
             ORDER BY id' ;
   $result = $f_var['db_connet']->query($query);
   while($row = $result->fetch(PDO::FETCH_ASSOC)){
     $f_var['books'][] = $row;
   }
-  $query = 'SELECT * 
+  $query = 'SELECT *
             FROM source
             ORDER BY id' ;
   $result = $f_var['db_connet']->query($query);
@@ -45,17 +56,17 @@ if( isset($f_var['books']) && 0<count($f_var['books'])){
   foreach($f_var['books'] as $f_var['bookSet']){
     if(isset($f_var['sources'][$f_var['bookSet']['source']])){
       $f_var['source_setting'] = $f_var['sources'][$f_var['bookSet']['source']];
-      if( chk_and_mkdir($f_var['book_path'].'json/') && 
+      if( chk_and_mkdir($f_var['book_path'].'json/') &&
           chk_and_mkdir($f_var['book_path'].'epub/')
       ){
         $book_list = list_dir_file($f_var['book_path']."json", array('.json'));
         if($f_var['refreash'] || !in_array($f_var['bookSet']['serial'].'.json',$book_list)){
           getBook($f_var);
         }
-        
+
         if($articles = read_book($f_var['bookSet']['serial'])){
           if('db'===$f_var['mode']){
-            $query = 'UPDATE books 
+            $query = 'UPDATE books
                       SET chapters='.count($articles).'
                       WHERE serial="'.$f_var['bookSet']['serial'].'"
                         AND enabled=1' ;
@@ -88,7 +99,7 @@ function getBook($f_var){
   foreach($result as $target){
     $startPage = $target->innertext;
   }
-  
+
   $result = $dom->find($f_var['source_setting']['pages_container']);
   if(0>=count($result)){
     echo 'can not find page container with pattern '.$f_var['source_setting']['pages_container']." .\r\n";
@@ -115,7 +126,7 @@ function getBook($f_var){
     }
     //$dom = file_get_html(str_replace('[page]', $targetPage, $book_link));
     $dom = str_get_html($dom_str);
-    
+
     //replce the tag and content in removeTags array
     foreach($f_var['source_setting']['removeTags'] as $key=>$val){
         $result = $dom->find($key);
@@ -129,15 +140,15 @@ function getBook($f_var){
           }
         }
       }
-    
+
     //find the main content to save
     $result = $dom->find($f_var['source_setting']['main_selector']);
-    
-    if(0<count($result)){ 
+
+    if(0<count($result)){
         foreach($result as $target){
           $content = '';
           $title = '';
-          
+
           //find chapter title
           if($postmessage = $target->find('h2', 0)){
             $postmessage = str_replace('&nbsp;', '', $postmessage->innertext);
@@ -189,7 +200,7 @@ function getBook($f_var){
   echo "\n";
   //encode articles to json and save
   if(isset($article) && is_array($article)){
-    
+
     $handle = fopen('books/json/'.$f_var['bookSet']['serial'].'.json', 'w');
     fwrite($handle, json_encode($article));
     fclose($handle);
@@ -199,7 +210,7 @@ function getBook($f_var){
 function read_book($book_serial){
   $contents = '';
   if(isset($book_serial) && is_file('books/json/'.$book_serial.'.json')){
-    $contents = file_get_contents('books/json/'.$book_serial.'.json'); 
+    $contents = file_get_contents('books/json/'.$book_serial.'.json');
   }
   if(''==$contents){
     return false;
@@ -216,8 +227,8 @@ function mkEpub($name, $author, $articles, $f_var){
   $book->setIdentifier("http://JohnJaneDoePublications.com/books/TestBook.html", EPub::IDENTIFIER_URI); // Could also be the ISBN number, prefered for published books, or a UUID.
   $book->setLanguage("tw"); // Not needed, but included for the example, Language is mandatory, but EPub defaults to "en". Use RFC3066 Language codes, such as "en", "da", "fr" etc.
   $book->setDescription("This is a brief description\nA test ePub book as an example of building a book in PHP");
-  $book->setAuthor($author, $author); 
-  $book->setPublisher($author, "http://web.leeyen.idv.tw/"); // I hope this is a non existant address :) 
+  $book->setAuthor($author, $author);
+  $book->setPublisher($author, "http://web.leeyen.idv.tw/"); // I hope this is a non existant address :)
   $book->setDate(time()); // Strictly not needed as the book date defaults to time().
   $book->setRights("Copyright and licence information specific for the book."); // As this is generated, this _could_ contain the name or licence information of the user who purchased the book, if needed. If this is used that way, the identifier must also be made unique for the book.
   $book->setSourceURL("http://web.leeyen.idv.tw/");
@@ -263,7 +274,7 @@ function mkEpub($name, $author, $articles, $f_var){
 function chk_title($title){
   $numbers = array('1234567890', '零', '一', '二', '兩', '三', '四', '五', '六', '七', '八', '九', '十', '百', '佰', '千', '萬', '億', '兆', '京', '垓');
   if(preg_match('/.*第['.implode('', $numbers).']*章.*/i', $title)
-    //|| preg_match('/.*第['.implode('', $numbers).']*節/i', $title) 
+    //|| preg_match('/.*第['.implode('', $numbers).']*節/i', $title)
     || preg_match('/.*ch .*/i', $title)
   ){
     return true;

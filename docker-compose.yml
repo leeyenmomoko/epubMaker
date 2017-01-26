@@ -1,0 +1,8 @@
+epubMaker:
+      container_name: epubMaker
+      image: leeyenmomoko/epub-maker
+      ports:
+          - "10082:80"
+      restart: always
+      environment:
+          - "TZ=Asia/Taipei"
